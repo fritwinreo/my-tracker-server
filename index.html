@@ -5,12 +5,16 @@
     <style>
         #map { height: 100vh; width: 100%; }
         body, html { margin: 0; padding: 0; }
+        #controls { position: absolute; top: 10px; left: 10px; z-index: 5; background-color: white; padding: 10px; border-radius: 5px; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
     </style>
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://fritwin-tracker-server.onrender.com/socket.io/socket.io.js"></script>
     <script>
-        const socket = io();
+        // Pointing to the Render server for the WebSocket connection
+        const socket = io('https://fritwin-tracker-server.onrender.com');
         let map;
         let markers = {};
+        let infoWindows = {};
+        let accuracyCircles = {};
 
         function initMap() {
             map = new google.maps.Map(document.getElementById("map"), {
@@ -18,21 +22,58 @@
                 zoom: 2,
             });
 
+            const controlsDiv = document.createElement('div');
+            controlsDiv.id = 'controls';
+            map.controls[google.maps.ControlPosition.TOP_LEFT].push(controlsDiv);
+
+            const centerButton = document.createElement('button');
+            centerButton.innerText = "Zoom to User 1";
+            centerButton.onclick = function() {
+                const user1Location = markers[Object.keys(markers)[0]];
+                if (user1Location) {
+                    map.setZoom(15);
+                    map.setCenter(user1Location.getPosition());
+                }
+            };
+            controlsDiv.appendChild(centerButton);
+
             socket.on('locationUpdate', (userLocations) => {
-                for (const id in userLocations) {
-                    const location = userLocations[id];
+                const users = Object.values(userLocations);
+                users.forEach(location => {
+                    const id = location.id;
                     const latLng = { lat: location.latitude, lng: location.longitude };
 
                     if (markers[id]) {
                         markers[id].setPosition(latLng);
+                        accuracyCircles[id].setCenter(latLng);
                     } else {
                         markers[id] = new google.maps.Marker({
                             position: latLng,
                             map: map,
+                            title: location.name,
                             label: location.name,
                         });
+
+                        infoWindows[id] = new google.maps.InfoWindow({
+                            content: `<h3>${location.name}</h3>`
+                        });
+
+                        accuracyCircles[id] = new google.maps.Circle({
+                            strokeColor: '#007BFF',
+                            strokeOpacity: 0.8,
+                            strokeWeight: 2,
+                            fillColor: '#007BFF',
+                            fillOpacity: 0.35,
+                            map: map,
+                            center: latLng,
+                            radius: 100
+                        });
+
+                        markers[id].addListener("click", () => {
+                            infoWindows[id].open(map, markers[id]);
+                        });
                     }
-                }
+                });
             });
         }
     </script>
