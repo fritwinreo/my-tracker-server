@@ -29,12 +29,12 @@
             map.controls[google.maps.ControlPosition.TOP_LEFT].push(controlsDiv);
 
             const centerButton = document.createElement('button');
-            centerButton.innerText = "Zoom to User 1";
+            centerButton.innerText = "Zoom to First User";
             centerButton.onclick = function() {
-                const user1Location = markers[Object.keys(markers)[0]];
-                if (user1Location) {
+                const firstUser = markers[Object.keys(markers)[0]];
+                if (firstUser) {
                     map.setZoom(15);
-                    map.setCenter(user1Location.getPosition());
+                    map.setCenter(firstUser.getPosition());
                 }
             };
             controlsDiv.appendChild(centerButton);
