@@ -17,6 +17,8 @@ let userLocations = {};
 // Handle new connections from clients (mobile apps and the website)
 io.on('connection', (socket) => {
     console.log('A client connected:', socket.id);
+    socket.on("error", (err) => {
+        console.error("Socket error:", err);
 
     // Listen for 'sendLocation' messages from the mobile app
     socket.on('sendLocation', (data) => {
