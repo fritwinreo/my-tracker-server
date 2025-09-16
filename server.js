@@ -8,7 +8,7 @@ const server = http.createServer(app);
 // ✅ Allow cross-origin connections
 const io = socketIo(server, {
   cors: {
-    origin: "*", // change to your domain later for security
+    origin: "*", // later restrict to your website domain
     methods: ["GET", "POST"]
   }
 });
@@ -18,26 +18,27 @@ let userLocations = {};
 
 // Handle connections
 io.on('connection', (socket) => {
-    console.log('A client connected:', socket.id);
+    console.log('✅ Client connected:', socket.id);
 
-    // ✅ Debugging
+    // Debugging listeners
     socket.on("connect_error", (err) => {
-        console.error("Connection error:", err.message);
+        console.error("❌ Connection error:", err.message);
     });
 
     socket.on("error", (err) => {
-        console.error("Socket error:", err);
+        console.error("❌ Socket error:", err);
     });
 
     // Receive location from Flutter app
     socket.on('sendLocation', (data) => {
+        console.log(`📍 Location received from ${data.id}:`, data);
         userLocations[data.id] = data;
         io.emit('locationUpdate', userLocations);
     });
 
     // Client disconnect
     socket.on('disconnect', () => {
-        console.log('A client disconnected:', socket.id);
+        console.log('⚠️ Client disconnected:', socket.id);
     });
 });
 
@@ -51,7 +52,12 @@ app.get('/ping', (req, res) => {
     res.send('pong');
 });
 
+// ✅ Debugging endpoint (see connected users)
+app.get('/debug', (req, res) => {
+    res.json({ connectedUsers: Object.keys(userLocations) });
+});
+
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`🚀 Server is running on port ${PORT}`);
 });
