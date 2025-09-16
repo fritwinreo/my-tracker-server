@@ -9,8 +9,10 @@
     </style>
     <script src="https://fritwin-tracker-server.onrender.com/socket.io/socket.io.js"></script>
     <script>
-        // Pointing to the Render server for the WebSocket connection
-        const socket = io('https://fritwin-tracker-server.onrender.com');
+        const socket = io('https://fritwin-tracker-server.onrender.com', {
+            transports: ['websocket']
+        });
+
         let map;
         let markers = {};
         let infoWindows = {};
@@ -76,6 +78,13 @@
                 });
             });
         }
+
+        // ✅ Keep-alive ping every 5 minutes
+        setInterval(() => {
+            fetch('https://fritwin-tracker-server.onrender.com/ping')
+                .then(res => console.log("Keep-alive ping:", res.status))
+                .catch(err => console.error("Ping failed:", err));
+        }, 300000); // 5 minutes
     </script>
 </head>
 <body>
